@@ -1,0 +1,6 @@
+{
+  "name": "NexusCanvas",
+  "description": "A 3D node-based visual programming environment.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
+  "majorCapabilities": []
+}

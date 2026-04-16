@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-dark: #050505;
+  --color-sidebar-bg: #0a0a0a;
+  --color-node-bg: rgba(25, 25, 30, 0.5);
+  --color-node-border: rgba(255, 255, 255, 0.15);
+  --color-accent: #06b6d4;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a0aec0;
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-primary);
+}
