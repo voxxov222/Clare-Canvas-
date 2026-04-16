@@ -3,6 +3,7 @@ import Editor from '@monaco-editor/react';
 import { Handle, Position } from '@xyflow/react';
 import { GoogleGenAI, FunctionDeclaration, Type } from "@google/genai";
 import { motion } from 'motion/react';
+import { NodePopupMenu } from './NodePopupMenu';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
@@ -10,6 +11,8 @@ export default function CodeNode({ data, selected }: { data: { label: string; in
   const [code, setCode] = useState(data.initialCode || '// Write your code here\nconsole.log("Hello World");');
   const [language, setLanguage] = useState('javascript');
   const [chat, setChat] = useState<{ role: 'user' | 'ai', text: string }[]>([]);
+  const [terminalHistory, setTerminalHistory] = useState<{ command: string, output: string }[]>([]);
+  const [view, setView] = useState<'chat' | 'terminal'>('terminal');
   const [input, setInput] = useState('');
   const [showDevOptions, setShowDevOptions] = useState(false);
   const [chartOptions, setChartOptions] = useState<{ timeframe?: string, type?: string } | null>(null);
@@ -44,9 +47,37 @@ export default function CodeNode({ data, selected }: { data: { label: string; in
   const handleChat = async (prompt?: string) => {
     const text = prompt || input;
     if (!text) return;
+    if (!prompt) setInput('');
+
+    if (view === 'terminal') {
+      const command = text.trim();
+      let output = '';
+
+      if (command.startsWith('gh repo clone ')) {
+        const repo = command.replace('gh repo clone ', '');
+        output = `> Cloning ${repo}...\n> Repository cloned successfully.\n> Detecting dependencies...\n> Found package.json\n> Executing 'npm install'...\n> Dependencies installed successfully.\n> Setup complete for ${repo}.`;
+        
+        // Add new node
+        if (data.onAddNode) {
+          data.onAddNode({ 
+            name: `Repo: ${repo.split('/')[1]}`, 
+            type: 'code', 
+            initialCode: `// Cloned from ${repo}\n// Loaded at ${new Date().toLocaleTimeString()}\nconsole.log("Zerpit loaded");` 
+          });
+        }
+      } else if (command === 'clear') {
+        setTerminalHistory([]);
+        return;
+      } else {
+        output = `Simulated output for command: "${command}"\n> Current time: ${new Date().toLocaleTimeString()}\n> Environment: Secure Sandbox`;
+      }
+
+      setTerminalHistory(prev => [...prev, { command, output }]);
+      return;
+    }
+
     const userMsg = { role: 'user' as const, text };
     setChat(prev => [...prev, userMsg]);
-    if (!prompt) setInput('');
 
     // Check for chart creation request
     if (text.toLowerCase().includes('chart') && !chartOptions) {
@@ -152,11 +183,12 @@ export default function CodeNode({ data, selected }: { data: { label: string; in
   ];
 
   return (
-    <motion.div 
-      className={`bg-white/5 backdrop-blur-2xl border ${selected ? 'border-accent shadow-[0_0_20px_rgba(6,182,212,0.5)]' : 'border-white/10 shadow-[0_0_15px_rgba(6,182,212,0.1)]'} rounded-2xl p-3 w-[500px]`}
-      animate={selected ? { scale: 1.05, boxShadow: "0 0 30px rgba(6,182,212,0.6)" } : { scale: 1, boxShadow: "0 0 15px rgba(6,182,212,0.1)" }}
-      transition={{ duration: 0.5, repeat: selected ? Infinity : 0, repeatType: "reverse" }}
-    >
+    <NodePopupMenu onAction={(action) => console.log(action)}>
+      <motion.div 
+        className={`relative bg-white/5 backdrop-blur-2xl border ${selected ? 'border-accent shadow-[0_0_20px_rgba(6,182,212,0.5)]' : 'border-white/10 shadow-[0_0_15px_rgba(6,182,212,0.1)]'} rounded-2xl p-3 w-[500px]`}
+        animate={selected ? { scale: 1.05, boxShadow: "0 0 30px rgba(6,182,212,0.6)" } : { scale: 1, boxShadow: "0 0 15px rgba(6,182,212,0.1)" }}
+        transition={{ duration: 0.5, repeat: selected ? Infinity : 0, repeatType: "reverse" }}
+      >
       {/* Terminal Header */}
       <div className="flex justify-between items-center mb-3 bg-bg-dark/50 p-2 rounded-lg border border-node-border">
         <div className="text-sm font-bold text-text-primary">{data.label}</div>
@@ -215,8 +247,32 @@ export default function CodeNode({ data, selected }: { data: { label: string; in
         </button>
       </div>
 
-      <div className="h-32 overflow-y-auto bg-black/20 rounded-lg p-2 mb-2 text-xs text-text-secondary">
-        {chat.map((msg, i) => <p key={i} className={msg.role === 'user' ? 'text-accent' : ''}>{msg.role}: {msg.text}</p>)}
+      <div className="flex gap-2 mb-2">
+        <button 
+          className={`flex-1 p-2 rounded-lg text-xs font-semibold ${view === 'terminal' ? 'bg-accent text-white' : 'bg-node-border text-text-secondary'}`}
+          onClick={() => setView('terminal')}
+        >
+          Terminal
+        </button>
+        <button 
+          className={`flex-1 p-2 rounded-lg text-xs font-semibold ${view === 'chat' ? 'bg-accent text-white' : 'bg-node-border text-text-secondary'}`}
+          onClick={() => setView('chat')}
+        >
+          Chat
+        </button>
+      </div>
+
+      <div className="h-32 overflow-y-auto bg-black/20 rounded-lg p-2 mb-2 text-xs text-text-secondary font-mono">
+        {view === 'terminal' ? (
+          terminalHistory.map((item, i) => (
+            <div key={i} className="mb-2">
+              <p className="text-accent">$ {item.command}</p>
+              <pre className="whitespace-pre-wrap">{item.output}</pre>
+            </div>
+          ))
+        ) : (
+          chat.map((msg, i) => <p key={i} className={msg.role === 'user' ? 'text-accent' : ''}>{msg.role}: {msg.text}</p>)
+        )}
       </div>
       <div className="flex gap-2">
         <input className="flex-1 bg-bg-dark p-2 rounded-lg text-xs" value={input} onChange={e => setInput(e.target.value)} placeholder="Ask AI or type command..." />
@@ -226,5 +282,6 @@ export default function CodeNode({ data, selected }: { data: { label: string; in
       <Handle type="target" position={Position.Left} className="!bg-accent !w-3 !h-3" />
       <Handle type="source" position={Position.Right} className="!bg-accent !w-3 !h-3" />
     </motion.div>
+    </NodePopupMenu>
   );
 }

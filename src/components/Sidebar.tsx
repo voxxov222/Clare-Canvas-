@@ -1,4 +1,5 @@
-import { Image, Video, Box, BarChart3, AppWindow, Code } from 'lucide-react';
+import { useState } from 'react';
+import { Image, Video, Box, BarChart3, AppWindow, Code, ChevronDown, ChevronUp } from 'lucide-react';
 import { widgetTypes } from './WidgetNode';
 
 const nodeTypes = [
@@ -10,6 +11,8 @@ const nodeTypes = [
 ];
 
 export default function Sidebar({ onAddNode }: { onAddNode: (nodeData: any) => void }) {
+  const [widgetsOpen, setWidgetsOpen] = useState(true);
+
   const onDragStart = (event: React.DragEvent, nodeData: any) => {
     event.dataTransfer.setData('application/json', JSON.stringify(nodeData));
     event.dataTransfer.effectAllowed = 'move';
@@ -31,8 +34,14 @@ export default function Sidebar({ onAddNode }: { onAddNode: (nodeData: any) => v
         </div>
       ))}
       
-      <h2 className="text-[11px] uppercase font-semibold text-text-secondary mt-6 mb-3 tracking-wider">Widgets</h2>
-      {widgetTypes.map((widget) => (
+      <div 
+        className="flex justify-between items-center mt-6 mb-3 cursor-pointer"
+        onClick={() => setWidgetsOpen(!widgetsOpen)}
+      >
+        <h2 className="text-[11px] uppercase font-semibold text-text-secondary tracking-wider">Widgets</h2>
+        {widgetsOpen ? <ChevronUp size={14} className="text-text-secondary" /> : <ChevronDown size={14} className="text-text-secondary" />}
+      </div>
+      {widgetsOpen && widgetTypes.map((widget) => (
         <div
           key={widget.name}
           draggable
@@ -42,6 +51,14 @@ export default function Sidebar({ onAddNode }: { onAddNode: (nodeData: any) => v
         >
           <widget.icon size={16} className={widget.color} />
           <span>{widget.name}</span>
+        </div>
+      ))}
+      
+      <h2 className="text-[11px] uppercase font-semibold text-text-secondary mt-6 mb-3 tracking-wider">Agent Swarms</h2>
+      {['Virtual Agent', 'Swarm Controller', 'Cloud Deploy', 'Task Manager'].map(tool => (
+        <div key={tool} className="flex items-center gap-3 p-2 bg-node-bg border border-node-border rounded hover:border-accent cursor-pointer text-[12px] mb-2 transition-colors text-text-secondary">
+          <AppWindow size={16} />
+          <span>{tool}</span>
         </div>
       ))}
     </div>

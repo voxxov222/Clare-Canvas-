@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { motion } from 'motion/react';
-import { Wifi, Bluetooth, MessageSquare, Bell, Smartphone, Target, Activity, Cpu, Battery, Zap, Globe, Shield } from 'lucide-react';
+import { Wifi, Bluetooth, MessageSquare, Bell, Smartphone, Target, Activity, Cpu, Battery, Zap, Globe, Shield, Satellite, Database, Terminal, Radio, Layers, Brain } from 'lucide-react';
+import { NodePopupMenu } from './NodePopupMenu';
 
 export const widgetTypes = [
   { name: 'Wi-Fi', icon: Wifi, color: 'text-green-400', animation: 'animate-pulse' },
@@ -16,6 +17,12 @@ export const widgetTypes = [
   { name: 'Energy', icon: Zap, color: 'text-amber-400', animation: 'animate-pulse' },
   { name: 'Network', icon: Globe, color: 'text-cyan-400', animation: 'animate-pulse' },
   { name: 'Security', icon: Shield, color: 'text-rose-400', animation: 'animate-pulse' },
+  { name: 'Satellite', icon: Satellite, color: 'text-sky-400', animation: 'animate-spin' },
+  { name: 'Database', icon: Database, color: 'text-indigo-400', animation: 'animate-pulse' },
+  { name: 'Terminal', icon: Terminal, color: 'text-gray-400', animation: 'animate-pulse' },
+  { name: 'Radio', icon: Radio, color: 'text-teal-400', animation: 'animate-ping' },
+  { name: 'Layers', icon: Layers, color: 'text-violet-400', animation: 'animate-pulse' },
+  { name: 'AI Core', icon: Brain, color: 'text-fuchsia-400', animation: 'animate-pulse' },
 ];
 
 export default function WidgetNode({ data, selected }: { data: { label: string; type: string }, selected?: boolean }) {
